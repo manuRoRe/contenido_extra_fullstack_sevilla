@@ -1,0 +1,141 @@
+/* === Estilos Generales === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* === Cabecera (Header) === */
+        header {
+            background: linear-gradient(135deg, #005A9C, #00b4db);
+            color: #fff;
+            padding: 4rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* === Contenedor Principal === */
+        .modules-container {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* === Estilos del Desplegable (Módulos) === */
+        details.module {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        details.module[open] {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        summary {
+            padding: 1.5rem 2rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            background-color: #ffffff;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #005A9C;
+            transition: background-color 0.3s;
+        }
+
+        summary:hover {
+            background-color: #f8fbff;
+        }
+
+        details[open] summary {
+            border-bottom: 1px solid #eee;
+            background-color: #f0f7ff;
+            color: #005A9C;
+        }
+
+        /* Ocultar la flecha por defecto y crear una personalizada (+ y -) */
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary::after {
+            content: '+';
+            font-size: 1.8rem;
+            color: #005A9C;
+            font-weight: 400;
+        }
+
+        details[open] summary::after {
+            content: '−';
+        }
+
+        /* === Lista de Clases dentro del Módulo === */
+        .classes-list {
+            list-style: none;
+            padding: 1.5rem 2rem;
+            background-color: #fafcfd;
+        }
+
+        .classes-list li {
+            margin-bottom: 1rem;
+        }
+
+        .classes-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .classes-list a {
+            text-decoration: none;
+            color: #555;
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background-color: #fff;
+            border: 1px solid #eaeaea;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .classes-list a::before {
+            content: '📄'; /* Icono de documento */
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .classes-list a:hover {
+            background-color: #005A9C;
+            color: #fff;
+            border-color: #005A9C;
+            transform: translateX(8px); /* Efecto de desplazamiento a la derecha */
+            box-shadow: 0 4px 10px rgba(0,90,156,0.2);
+        }
+
+    
