@@ -97,6 +97,10 @@
         }
 
         /* === Lista de Clases dentro del Módulo === */
+        .rounded {
+            border-radius: 50%;
+        }
+
         .classes-list {
             list-style: none;
             padding: 1.5rem 2rem;
