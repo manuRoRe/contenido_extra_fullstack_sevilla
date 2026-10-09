@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Map, Filter y Reduce — La Cadena de Montaje</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0f1117;
+        --surface: #181c27;
+        --surface2: #1e2333;
+        --border: #2a3045;
+        --text: #e8eaf0;
+        --text-muted: #7c849e;
+        --accent: #5b8dee;
+        --accent2: #a78bfa;
+        --green: #34d399;
+        --yellow: #fbbf24;
+        --red: #f87171;
+        --ls-color: #5b8dee;
+        --ss-color: #a78bfa;
+        --re-color: #34d399;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-sizing: border-box;
+      }
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) {
+          --bg: #f5f7ff;
+          --surface: #ffffff;
+          --surface2: #eef1fb;
+          --border: #d4d9ef;
+          --text: #1a1d2e;
+          --text-muted: #6b728e;
+        }
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.65;
+        font-size: 15px;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 24px;
+        height: 52px;
+        z-index: 100;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      nav a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 6px;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        flex-shrink: 0;
+      }
+      nav a:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      nav .dot {
+        color: var(--border);
+        font-size: 10px;
+      }
+
+      .wrap {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      .hero {
+        text-align: center;
+        padding: 56px 0 48px;
+      }
+      .hero .tag {
+        display: inline-block;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin-bottom: 20px;
+        letter-spacing: 0.04em;
+      }
+      .hero h1 {
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        font-weight: 700;
+        line-height: 1.15;
+        margin-bottom: 14px;
+      }
+      .hero h1 span {
+        color: var(--accent);
+      }
+      .hero p {
+        color: var(--text-muted);
+        font-size: 17px;
+        max-width: 560px;
+        margin: 0 auto 32px;
+      }
+      .hero-pills {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .pill {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1.5px solid;
+      }
+      .pill-ls {
+        color: var(--ls-color);
+        border-color: var(--ls-color);
+        background: rgba(91, 141, 238, 0.08);
+      }
+      .pill-ss {
+        color: var(--ss-color);
+        border-color: var(--ss-color);
+        background: rgba(167, 139, 250, 0.08);
+      }
+      .pill-re {
+        color: var(--re-color);
+        border-color: var(--re-color);
+        background: rgba(52, 211, 153, 0.08);
+      }
+
+      section {
+        margin-bottom: 56px;
+      }
+      .section-header {
+        margin-bottom: 28px;
+      }
+      .section-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text);
+      }
+      .section-intro {
+        color: var(--text-muted);
+        font-size: 15px;
+        line-height: 1.7;
+        margin-bottom: 24px;
+      }
+
+      .step {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 36px;
+      }
+      .step-num {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 2px;
+      }
+      .step-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .step-body p {
+        color: var(--text-muted);
+        margin-bottom: 12px;
+      }
+
+      .code-block {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+      .code-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface2);
+      }
+      .code-lang {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .copy-btn {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        font-family: "Inter", sans-serif;
+      }
+      .copy-btn:hover {
+        background: var(--border);
+        color: var(--text);
+      }
+      .copy-btn.copied {
+        color: var(--green);
+        border-color: var(--green);
+      }
+      pre {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        line-height: 1.7;
+        padding: 18px 20px;
+        overflow-x: auto;
+        color: var(--text);
+      }
+      .kw {
+        color: #7dd3fc;
+      }
+      .fn {
+        color: #a78bfa;
+      }
+      .str {
+        color: #86efac;
+      }
+      .cm {
+        color: var(--text-muted);
+        font-style: italic;
+      }
+      .num {
+        color: #fbbf24;
+      }
+
+      .callout {
+        border-left: 3px solid;
+        padding: 14px 18px;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 16px;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+      .callout-info {
+        border-color: var(--accent);
+        background: rgba(91, 141, 238, 0.07);
+      }
+      .callout-warn {
+        border-color: var(--yellow);
+        background: rgba(251, 191, 36, 0.07);
+      }
+      .callout-tip {
+        border-color: var(--green);
+        background: rgba(52, 211, 153, 0.07);
+      }
+      .callout strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        margin-bottom: 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+      }
+      th {
+        background: var(--surface2);
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      code {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        background: var(--surface2);
+        padding: 2px 7px;
+        border-radius: 4px;
+        color: var(--accent2);
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 48px 0;
+      }
+
+      .quiz {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      .quiz p {
+        font-weight: 600;
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+      .quiz-opts {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .quiz-opt {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 13.5px;
+        transition: border-color 0.15s;
+        text-align: left;
+        font-family: "Inter", sans-serif;
+        color: var(--text);
+      }
+      .quiz-opt:hover {
+        border-color: var(--accent);
+      }
+      .quiz-opt.correct {
+        border-color: var(--green);
+        background: rgba(52, 211, 153, 0.08);
+        color: var(--green);
+      }
+      .quiz-opt.wrong {
+        border-color: var(--red);
+        background: rgba(248, 113, 113, 0.08);
+        color: var(--red);
+      }
+      .quiz-feedback {
+        margin-top: 10px;
+        font-size: 13px;
+        min-height: 20px;
+        color: var(--text-muted);
+      }
+
+      .cheat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 14px;
+      }
+      .cheat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        font-size: 13px;
+      }
+      .cheat-card .cheat-title {
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+      .cheat-card code {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11.5px;
+      }
+
+      #progress-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        z-index: 200;
+        transition: width 0.1s;
+        width: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!--[cite: 4] -->
+    <div id="progress-bar"></div>
+
+    <nav>
+      <a href="#intro">Intro</a><span class="dot">·</span> <a href="#map">Map</a
+      ><span class="dot">·</span> <a href="#filter">Filter y Búsquedas</a
+      ><span class="dot">·</span> <a href="#puras">Puras y Mutabilidad</a
+      ><span class="dot">·</span> <a href="#reduce">Reduce</a
+      ><span class="dot">·</span> <a href="#arquitectura">Arquitectura</a
+      ><span class="dot">·</span>
+      <a href="#cheatsheet">Chuleta</a>
+    </nav>
+
+    <div class="wrap">
+      <!-- HERO -->
+      <div class="hero" id="intro">
+        <div class="tag">Módulo 1 · Día 2 · The Bridge</div>
+        <h1>Map, Filter y Reduce<br /><span>La cadena de montaje</span></h1>
+        <p>
+          Transforma, selecciona y resume datos en una línea, sin tocar el
+          original.
+        </p>
+        <div class="hero-pills">
+          <span class="pill pill-ls">map: transforma</span>
+          <span class="pill pill-ss">filter: selecciona</span>
+          <span class="pill pill-re">reduce: resume</span>
+        </div>
+      </div>
+
+      <!-- ================== 1. MAP ================== -->
+      <section id="map">
+        <div class="section-header">
+          <div class="section-label">Máquina 1</div>
+          <h2>Map — Transforma cada elemento</h2>
+          <p class="section-intro">
+            Si en un array entran 5 elementos, con `map` salen 5 elementos
+            transformados. Devuelve un array nuevo, protegiendo los datos
+            originales.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Extraer datos específicos (De for a map)</h3>
+            <p>
+              Pasamos de usar 4 líneas con un bucle `for` y `push` a resolverlo
+              en una sola línea mediante un callback.
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre><span class="cm">// AYER: 4 líneas (for + push)</span>
+<span class="kw">const</span> titulos = [];
+<span class="kw">for</span> (<span class="kw">const</span> p <span class="kw">of</span> pelis) {
+  titulos.<span class="fn">push</span>(p.titulo);
+}
+
+<span class="cm">// HOY: 1 línea con map</span>
+<span class="kw">const</span> titulos = pelis.<span class="fn">map</span>(p => p.titulo);</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Transformar números (Ejemplo: conversión)</h3>
+            <p>
+              Podemos usar `map` para realizar cálculos matemáticos en todos los
+              elementos de un array a la vez.
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre><span class="cm">// Tenemos la duración en minutos, queremos verla en horas redondeada</span>
+<span class="kw">const</span> duracionHoras = pelis.<span class="fn">map</span>(p => (p.duracion / <span class="num">60</span>).<span class="fn">toFixed</span>(<span class="num">1</span>));
+<span class="cm">// Resultado: ["2.8", "1.8", "2.2", ...]</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>De objetos a HTML con map + join</h3>
+            <p>
+              Podemos transformar un array de objetos en un gran bloque de texto
+              HTML para insertarlo en la página.
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre>lista.innerHTML = pelis
+  .<span class="fn">map</span>((p, i) => <span class="str">`&lt;li&gt;</span><span class="str">${i + 1}</span><span class="str">. </span><span class="str">${p.titulo}</span><span class="str">&lt;/li&gt;`</span>)
+  .<span class="fn">join</span>(<span class="str">""</span>); <span class="cm">// Une todos los strings del array</span></pre>
+            </div>
+            <div class="callout callout-warn">
+              <strong>⚠️ No olvides el join("")</strong>
+              Si insertas el resultado del map directamente en el HTML sin hacer
+              `.join("")`, aparecerán comas separando cada elemento en la
+              pantalla.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- ================== 2. FILTER ================== -->
+      <section id="filter">
+        <div class="section-header">
+          <div class="section-label">Máquina 2</div>
+          <h2>Filter y Búsquedas — El tamiz</h2>
+          <p class="section-intro">
+            `filter` evalúa cada elemento. Si la función responde `true`, el
+            elemento pasa al nuevo array; si responde `false`, se queda atrás.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Filtrar por una o varias condiciones</h3>
+            <p>
+              Puedes aplicar tantas condiciones matemáticas o lógicas como
+              necesites.
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre><span class="cm">// Una condición simple</span>
+<span class="kw">const</span> obrasMaestras = pelis.<span class="fn">filter</span>(p => p.nota >= <span class="num">8.5</span>);
+
+<span class="cm">// Múltiples condiciones (Ej: Animación moderna)</span>
+<span class="kw">const</span> animacionReciente = pelis.<span class="fn">filter</span>(p => p.genero === <span class="str">"animación"</span> && p.anio > <span class="num">2014</span>);
+<span class="cm">// Devuelve: [{titulo: "Coco"...}, {titulo: "Del revés"...}]</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Encadenar métodos (Chaining)</h3>
+            <p>
+              Podemos encadenar métodos como una receta de arriba a abajo. El
+              orden es fundamental.
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre><span class="kw">const</span> dramas = pelis
+  .<span class="fn">filter</span>(p => p.genero === <span class="str">"drama"</span>) <span class="cm">// 10 objetos → 3 objetos</span>
+  .<span class="fn">map</span>(p => p.titulo)              <span class="cm">// 3 objetos → 3 textos</span>
+  .<span class="fn">join</span>(<span class="str">", "</span>);                       <span class="cm">// "Parásitos, Whiplash, Joker"</span></pre>
+            </div>
+            <div class="callout callout-warn">
+              <strong>⚠️ El orden importa</strong>
+              Si haces el `map` antes para extraer el título, en el siguiente
+              paso ya no tendrás el objeto completo y no podrás filtrar por
+              género.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Otros métodos de búsqueda</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Método</th>
+                    <th>Para qué sirve</th>
+                    <th>Devuelve</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>find</code></td>
+                    <td>
+                      Busca el primer elemento que cumple la condición y se
+                      detiene.
+                    </td>
+                    <td>El elemento, o <code>undefined</code> si no hay.</td>
+                  </tr>
+                  <tr>
+                    <td><code>findIndex</code></td>
+                    <td>
+                      Busca la posición (índice) del primer elemento que cumple.
+                    </td>
+                    <td>Un número, o <code>-1</code> si no hay.</td>
+                  </tr>
+                  <tr>
+                    <td><code>some</code></td>
+                    <td>
+                      Pregunta si <em>algún</em> elemento cumple la condición.
+                    </td>
+                    <td><code>true</code> o <code>false</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><code>every</code></td>
+                    <td>
+                      Pregunta si <em>todos</em> los elementos cumplen la
+                      condición.
+                    </td>
+                    <td><code>true</code> o <code>false</code>.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- ================== 3. PURAS Y MUTABILIDAD ================== -->
+      <section id="puras">
+        <div class="section-header">
+          <div class="section-label">Concepto Clave</div>
+          <h2>Funciones Puras y Mutabilidad</h2>
+        </div>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Función Pura vs Impura</h3>
+            <p>
+              Una función <strong>pura</strong> es como una calculadora: para un
+              mismo input, siempre devuelve el mismo output, y solo usa sus
+              parámetros sin alterar el exterior. Una función
+              <strong>impura</strong> produce efectos secundarios (cambia
+              variables externas, muta el array recibido, altera el DOM o usa
+              herramientas como `Math.random`).
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>¿Este método cambia el original?</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="color: var(--red)">MUTAN (⚠️ Peligro)</th>
+                    <th style="color: var(--green)">NO MUTAN (✅ Seguro)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <code>push</code>, <code>pop</code>, <code>shift</code>,
+                      <code>unshift</code>, <code>splice</code>,
+                      <code>sort</code>, <code>reverse</code>
+                    </td>
+                    <td>
+                      <code>map</code>, <code>filter</code>,
+                      <code>reduce</code>, <code>slice</code>,
+                      <code>concat</code>, <code>join</code>,
+                      <code>toSorted</code>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="quiz">
+          <p>
+            La trampa de sort: Si ejecutas `[10, 9, 2].sort()`, ¿qué resultado
+            obtienes?
+          </p>
+          <div class="quiz-opts">
+            <button class="quiz-opt" onclick="checkQuiz(this, false)">
+              <code>[2, 9, 10]</code>
+            </button>
+            <button class="quiz-opt" onclick="checkQuiz(this, true)">
+              <code>[10, 2, 9]</code> (Ordena como texto y muta el array
+              original)
+            </button>
+          </div>
+          <div class="quiz-feedback"></div>
+        </div>
+
+        <div class="callout callout-tip">
+          <strong>💡 Solución a sort y reverse</strong>
+          Para ordenar números correctamente sin mutar el original, haz primero
+          una copia con `slice()` y pásale un comparador: <br />
+          <code>nums.slice().sort((a, b) => a - b)</code>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- ================== 4. REDUCE ================== -->
+      <section id="reduce">
+        <div class="section-header">
+          <div class="section-label">Máquina 3</div>
+          <h2>Reduce — La bola de nieve</h2>
+          <p class="section-intro">
+            `reduce` resume todos los elementos de un array en un único valor
+            (un total, un objeto agrupado, o el mejor elemento).
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Sumar totales (El acumulador)</h3>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre><span class="cm">// acc es lo acumulado, p es el elemento actual. 0 es el valor inicial.</span>
+<span class="kw">const</span> duracionTotal = pelis.<span class="fn">reduce</span>((acc, p) => acc + p.duracion, <span class="num">0</span>);</pre>
+            </div>
+            <div class="callout callout-warn">
+              <strong>⚠️ Pon siempre el valor inicial</strong>
+              Si omites el `0` al sumar objetos, el primer valor (acc) será el
+              primer objeto entero, rompiendo la suma.
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Encontrar al "campeón" (Reduce sin valor inicial)</h3>
+            <p>
+              A veces no queremos sumar, sino que los elementos "compitan" entre
+              ellos y quedarnos con uno (ej. el de mejor nota).
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre><span class="cm">// Si no pasamos valor inicial, 'acc' (mejor) empieza siendo la 1ª peli</span>
+<span class="kw">const</span> mejorPeli = pelis.<span class="fn">reduce</span>((mejor, p) => p.nota > mejor.nota ? p : mejor);
+<span class="cm">// En cada vuelta compara: si la actual tiene mejor nota, se convierte en la nueva ganadora.</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Contar y agrupar (Objetos dinámicos)</h3>
+            <p>
+              Si el valor inicial es un objeto vacío `{}`, puedes ir
+              construyendo un diccionario con totales por categoría.
+            </p>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre><span class="kw">const</span> porGenero = pelis.<span class="fn">reduce</span>((acc, p) => {
+  acc[p.genero] = (acc[p.genero] || <span class="num">0</span>) + <span class="num">1</span>;
+  <span class="kw">return</span> acc; <span class="cm">// ¡Crucial devolver el acumulador en cada vuelta!</span>
+}, {}); <span class="cm">// Empieza vacío</span>
+<span class="cm">// Resultado: { "ciencia ficción": 3, "animación": 3, ... }</span></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- ================== 5. ARQUITECTURA ================== -->
+      <section id="arquitectura">
+        <div class="section-header">
+          <div class="section-label">Flujo de datos</div>
+          <h2>Estado → render() → DOM</h2>
+        </div>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Separación de responsabilidades</h3>
+            <p>
+              Nuestras funciones de filtrado, cálculo de medias o conteo deben
+              ser <strong>puras</strong> (reciben datos, devuelven datos). La
+              única función encargada de tocar el DOM es <code>render()</code>.
+            </p>
+
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">JavaScript</span
+                ><button class="copy-btn" onclick="copyCode(this)">
+                  Copiar
+                </button>
+              </div>
+              <pre>buscar.<span class="fn">addEventListener</span>(<span class="str">"input"</span>, (e) => {
+  <span class="cm">// 1. Cambia el estado</span>
+  filtros.texto = e.target.value; 
+  
+  <span class="cm">// 2. Repinta TODO llamando a la función impura</span>
+  <span class="fn">render</span>(); 
+});</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- ================== CHEAT SHEET ================== -->
+      <section id="cheatsheet">
+        <div class="section-header">
+          <div class="section-label">Resumen</div>
+          <h2>Chuleta de arrays</h2>
+        </div>
+
+        <div class="cheat-grid">
+          <div class="cheat-card">
+            <div class="cheat-title" style="color: var(--ls-color)">
+              Transformar
+            </div>
+            <code>map(fn)</code>
+            <p
+              style="color: var(--text-muted); font-size: 12px; margin-top: 6px"
+            >
+              Array del mismo tamaño. No muta.
+            </p>
+          </div>
+          <div class="cheat-card">
+            <div class="cheat-title" style="color: var(--ss-color)">
+              Seleccionar
+            </div>
+            <code>filter(fn)</code>
+            <p
+              style="color: var(--text-muted); font-size: 12px; margin-top: 6px"
+            >
+              Quedarse con algunos. No muta.
+            </p>
+          </div>
+          <div class="cheat-card">
+            <div class="cheat-title" style="color: var(--re-color)">
+              Resumir
+            </div>
+            <code>reduce(fn, inicial)</code>
+            <p
+              style="color: var(--text-muted); font-size: 12px; margin-top: 6px"
+            >
+              Resume en un único valor. No muta.
+            </p>
+          </div>
+          <div class="cheat-card">
+            <div class="cheat-title" style="color: var(--accent2)">Buscar</div>
+            <code>find(fn)</code> · <code>findIndex(fn)</code>
+            <p
+              style="color: var(--text-muted); font-size: 12px; margin-top: 6px"
+            >
+              El primero que cumple (o su índice).
+            </p>
+          </div>
+          <div class="cheat-card">
+            <div class="cheat-title" style="color: var(--accent2)">
+              Comprobar
+            </div>
+            <code>some(fn)</code> · <code>every(fn)</code>
+            <p
+              style="color: var(--text-muted); font-size: 12px; margin-top: 6px"
+            >
+              ¿Alguno o Todos? Devuelve true/false.
+            </p>
+          </div>
+          <div class="cheat-card">
+            <div class="cheat-title" style="color: var(--yellow)">
+              Copiar y Ordenar
+            </div>
+            <code>slice().sort(fn)</code>
+            <p
+              style="color: var(--text-muted); font-size: 12px; margin-top: 6px"
+            >
+              Para no mutar el original.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // Barra de progreso
+      window.addEventListener("scroll", () => {
+        const el = document.documentElement;
+        const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+        document.getElementById("progress-bar").style.width = pct + "%";
+      });
+
+      // Copiar código
+      function copyCode(btn) {
+        const pre = btn.closest(".code-block").querySelector("pre");
+        navigator.clipboard.writeText(pre.innerText).then(() => {
+          btn.textContent = "✓ Copiado";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = "Copiar";
+            btn.classList.remove("copied");
+          }, 2000);
+        });
+      }
+
+      // Quiz
+      function checkQuiz(btn, correct) {
+        const opts = btn.closest(".quiz-opts").querySelectorAll(".quiz-opt");
+        const fb = btn.closest(".quiz").querySelector(".quiz-feedback");
+        opts.forEach((o) => (o.disabled = true));
+        btn.classList.add(correct ? "correct" : "wrong");
+        fb.textContent = correct
+          ? "✅ ¡Correcto! El método sort por defecto ordena los números tratándolos como texto, por lo que el 10 aparece antes que el 2."
+          : "❌ Incorrecto. Recuerda que sort muta el array y, por defecto, evalúa los números como strings.";
+        fb.style.color = correct ? "var(--green)" : "var(--red)";
+      }
+    </script>
+  </body>
+</html>
