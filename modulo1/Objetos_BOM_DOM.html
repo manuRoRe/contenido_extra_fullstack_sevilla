@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Objetos, DOM y BOM — Guía para el alumno</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2333;
+    --border: #2a3045;
+    --text: #e8eaf0;
+    --text-muted: #7c849e;
+    --accent: #5b8dee;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --ls-color: #5b8dee;
+    --ss-color: #a78bfa;
+    --re-color: #34d399;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f5f7ff;
+      --surface: #ffffff;
+      --surface2: #eef1fb;
+      --border: #d4d9ef;
+      --text: #1a1d2e;
+      --text-muted: #6b728e;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    font-size: 15px;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: env(safe-area-inset-top, 0px);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 24px; height: 52px;
+    z-index: 100; overflow-x: auto; white-space: nowrap;
+  }
+  nav a {
+    color: var(--text-muted); text-decoration: none;
+    font-size: 13px; font-weight: 500; padding: 4px 10px;
+    border-radius: 6px; transition: background .15s, color .15s;
+    flex-shrink: 0;
+  }
+  nav a:hover { background: var(--surface2); color: var(--text); }
+  nav .dot { color: var(--border); font-size: 10px; }
+
+  /* LAYOUT */
+  .wrap { max-width: 820px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* HERO */
+  .hero { text-align: center; padding: 56px 0 48px; }
+  .hero .tag {
+    display: inline-block;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 20px;
+    letter-spacing: .04em;
+  }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; line-height: 1.15; margin-bottom: 14px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--text-muted); font-size: 17px; max-width: 560px; margin: 0 auto 32px; }
+  .hero-pills { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    border: 1.5px solid;
+  }
+  .pill-ls { color: var(--ls-color); border-color: var(--ls-color); background: rgba(91,141,238,.08); }
+  .pill-ss { color: var(--ss-color); border-color: var(--ss-color); background: rgba(167,139,250,.08); }
+  .pill-re { color: var(--re-color); border-color: var(--re-color); background: rgba(52,211,153,.08); }
+
+  /* SECTION */
+  section { margin-bottom: 56px; }
+  .section-header { margin-bottom: 28px; }
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;
+  }
+  h2 { font-size: 1.55rem; font-weight: 700; margin-bottom: 10px; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; color: var(--text); }
+  .section-intro { color: var(--text-muted); font-size: 15px; line-height: 1.7; margin-bottom: 24px; }
+
+  /* STEP */
+  .step { display: flex; gap: 20px; margin-bottom: 36px; }
+  .step-num {
+    flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+  .step-num.green { background: var(--green); }
+  .step-num.purple { background: var(--accent2); }
+  .step-body { flex: 1; min-width: 0; }
+  .step-body p { color: var(--text-muted); margin-bottom: 12px; }
+
+  /* CODE */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .code-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em;
+  }
+  .copy-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 12px; font-weight: 500;
+    padding: 4px 12px; border-radius: 6px; cursor: pointer;
+    transition: background .15s, color .15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .copy-btn:hover { background: var(--border); color: var(--text); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; line-height: 1.7;
+    padding: 18px 20px;
+    overflow-x: auto;
+    color: var(--text);
+  }
+  .kw { color: #7dd3fc; }
+  .fn { color: #a78bfa; }
+  .str { color: #86efac; }
+  .cm { color: var(--text-muted); font-style: italic; }
+  .num { color: #fbbf24; }
+  .re { color: #fb923c; }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 3px solid; padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 16px; font-size: 14px; line-height: 1.65;
+  }
+  .callout-info { border-color: var(--accent); background: rgba(91,141,238,.07); }
+  .callout-warn { border-color: var(--yellow); background: rgba(251,191,36,.07); }
+  .callout-tip  { border-color: var(--green);  background: rgba(52,211,153,.07); }
+  .callout strong { display: block; margin-bottom: 4px; }
+  .callout-info strong { color: var(--accent); }
+  .callout-warn strong { color: var(--yellow); }
+  .callout-tip  strong { color: var(--green); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { background: var(--surface2); color: var(--text-muted); font-size: 11px; font-weight: 600;
+       text-transform: uppercase; letter-spacing: .05em; padding: 10px 14px; text-align: left;
+       border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--surface2);
+         padding: 2px 7px; border-radius: 4px; color: var(--accent2); }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 48px 0;
+  }
+
+  /* ACCORDION for TRY IT */
+  details {
+    border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 12px; overflow: hidden;
+  }
+  summary {
+    padding: 12px 18px; cursor: pointer; font-weight: 600; font-size: 14px;
+    background: var(--surface2); list-style: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: '▶'; font-size: 10px; transition: transform .2s; color: var(--text-muted); }
+  details[open] summary::before { transform: rotate(90deg); }
+  details > div { padding: 16px 18px; }
+
+  /* MINI QUIZ */
+  .quiz { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .quiz p { font-weight: 600; margin-bottom: 12px; font-size: 14px; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-opt {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 13.5px;
+    transition: border-color .15s; text-align: left;
+    font-family: 'Inter', sans-serif; color: var(--text);
+  }
+  .quiz-opt:hover { border-color: var(--accent); }
+  .quiz-opt.correct { border-color: var(--green); background: rgba(52,211,153,.08); color: var(--green); }
+  .quiz-opt.wrong   { border-color: var(--red);   background: rgba(248,113,113,.08); color: var(--red); }
+  .quiz-feedback { margin-top: 10px; font-size: 13px; min-height: 20px; color: var(--text-muted); }
+
+  /* CHEAT SHEET */
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .cheat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; font-size: 13px;
+  }
+  .cheat-card .cheat-title { font-weight: 700; margin-bottom: 8px; font-size: 13px; }
+  .cheat-card code { display: block; margin-bottom: 4px; font-size: 11.5px; }
+
+  /* SCROLL PROGRESS */
+  #progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    z-index: 200; transition: width .1s;
+    width: 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <a href="#intro">Intro</a>
+  <span class="dot">·</span>
+  <a href="#objetos">Objetos</a>
+  <span class="dot">·</span>
+  <a href="#json">JSON</a>
+  <span class="dot">·</span>
+  <a href="#arrow">Arrow Functions</a>
+  <span class="dot">·</span>
+  <a href="#dom">El DOM</a>
+  <span class="dot">·</span>
+  <a href="#bom">El BOM</a>
+  <span class="dot">·</span>
+  <a href="#eventos">Eventos</a>
+  <span class="dot">·</span>
+  <a href="#cheatsheet">Chuleta</a>
+</nav>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero" id="intro">
+    <div class="tag">Módulo 1 · Día 1 · The Bridge</div>
+    <h1>Objetos, DOM y BOM<br><span>La web cobra vida</span></h1>
+    <p>Aprende cómo Javascript interactúa con los datos en formato de objetos, manipula la estructura de una página (DOM), reacciona a los eventos del usuario y aprovecha el navegador (BOM).</p>
+    <div class="hero-pills">
+      <span class="pill pill-ls">Objetos</span>
+      <span class="pill pill-ss">DOM</span>
+      <span class="pill pill-re">Eventos</span>
+    </div>
+  </div>
+
+  <!-- ================== 1. OBJETOS ================== -->
+  <section id="objetos">
+    <div class="section-header">
+      <div class="section-label">Parte 1</div>
+      <h2>Objetos — Fichas de datos</h2>
+      <p class="section-intro">
+        Un objeto es una colección de datos agrupados como una ficha, mediante pares de <strong>clave → valor</strong>. 
+        El valor puede ser texto, números, arrays e incluso otros objetos.
+      </p>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Estructura de un Objeto</h3>
+        <p>Un objeto se define con llaves <code>{}</code>. Cada propiedad tiene una etiqueta (la clave) y su dato (el valor).</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="kw">const</span> peli = {
+  titulo: <span class="str">"Interstellar"</span>,
+  anio: <span class="num">2014</span>,
+  generos: [<span class="str">"sci-fi"</span>, <span class="str">"drama"</span>],
+  director: { nombre: <span class="str">"Nolan"</span> },
+  vista: <span class="kw">true</span>
+};</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Leer, añadir y modificar (El punto es un camino)</h3>
+        <p>Usamos un punto <code>.</code> para acceder a las propiedades si sabemos su nombre. Si la clave está en una variable, usamos corchetes <code>[]</code>.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="cm">// Leer un dato anidado</span>
+<span class="fn">console</span>.<span class="fn">log</span>(peli.director.nombre); <span class="cm">// "Nolan"</span>
+
+<span class="cm">// Leer con una variable</span>
+<span class="kw">let</span> campo = <span class="str">"titulo"</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(peli[campo]); <span class="cm">// "Interstellar"</span>
+
+<span class="cm">// Añadir nueva propiedad</span>
+peli.nota = <span class="num">8.7</span>;
+
+<span class="cm">// Modificar una existente</span>
+peli.vista = <span class="kw">false</span>;
+
+<span class="cm">// Eliminar</span>
+<span class="kw">delete</span> peli.director;</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Métodos y `this`</h3>
+        <p>Un método es una función que vive dentro de un objeto. Usamos <code>this</code> para referirnos al propio objeto (lo que está a la izquierda del punto al llamar al método).</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="kw">const</span> alumno = {
+  nombre: <span class="str">"Lucía"</span>,
+  <span class="fn">saludar</span>() {
+    <span class="kw">return</span> <span class="str">`Hola, soy </span><span class="str">${this.nombre}</span><span class="str">`</span>;
+  }
+};
+
+<span class="fn">console</span>.<span class="fn">log</span>(alumno.<span class="fn">saludar</span>()); <span class="cm">// "Hola, soy Lucía"</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================== 2. JSON ================== -->
+  <section id="json">
+    <div class="section-header">
+      <div class="section-label">Parte 2</div>
+      <h2>JSON — El objeto convertido en texto para viajar</h2>
+      <p class="section-intro">
+        Para guardar un objeto o enviarlo por internet, necesitamos convertirlo en un string de texto. Esto es JSON (JavaScript Object Notation).
+      </p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Característica</th>
+            <th style="color:var(--ls-color)">Objeto JS</th>
+            <th style="color:var(--ss-color)">JSON</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Claves</td><td><code>titulo</code></td><td><code>"titulo"</code> (siempre con comillas dobles)</td></tr>
+          <tr><td>Textos</td><td><code>'...'</code> o <code>"..."</code></td><td>Solo <code>"..."</code></td></tr>
+          <tr><td>Funciones</td><td>✅ Sí</td><td>❌ No</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Convertir: JSON.stringify y JSON.parse</h3>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="kw">const</span> obj = { titulo: <span class="str">"Coco"</span> };
+
+<span class="cm">// Para ENVIAR o GUARDAR (de objeto a string)</span>
+<span class="kw">const</span> texto = <span class="fn">JSON</span>.<span class="fn">stringify</span>(obj);
+<span class="fn">console</span>.<span class="fn">log</span>(texto); <span class="cm">// '{"titulo":"Coco"}'</span>
+
+<span class="cm">// Al RECIBIR o LEER (de string a objeto)</span>
+<span class="kw">const</span> recuperado = <span class="fn">JSON</span>.<span class="fn">parse</span>(texto);
+<span class="fn">console</span>.<span class="fn">log</span>(recuperado.titulo); <span class="cm">// "Coco"</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================== 3. ARROW FUNCTIONS ================== -->
+  <section id="arrow">
+    <div class="section-header">
+      <div class="section-label">Parte 3</div>
+      <h2>Arrow Functions — Sintaxis reducida</h2>
+      <p class="section-intro">
+        Las <em>arrow functions</em> (funciones flecha) son una forma más corta de escribir funciones. Son especialmente útiles para pasarlas a otras funciones como "callbacks".
+      </p>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>De `function` a flecha en 3 pasos</h3>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="cm">// Punto de partida</span>
+<span class="kw">function</span> <span class="fn">doble</span>(n) { <span class="kw">return</span> n * <span class="num">2</span>; }
+
+<span class="cm">// 1. Fuera 'function', entra '=>'</span>
+<span class="kw">const</span> doble = (n) => { <span class="kw">return</span> n * <span class="num">2</span>; };
+
+<span class="cm">// 2. Una línea: fuera llaves y 'return' implícito</span>
+<span class="kw">const</span> doble = (n) => n * <span class="num">2</span>;
+
+<span class="cm">// 3. Un solo parámetro: fuera paréntesis</span>
+<span class="kw">const</span> doble = n => n * <span class="num">2</span>;</pre>
+        </div>
+        <div class="callout callout-warn">
+          <strong>⚠️ Devolver un objeto en una línea</strong>
+          Para devolver un objeto sin usar `return`, debes envolverlo en paréntesis. Si usas llaves directamente, JS pensará que es el cuerpo de la función.
+          <br><code>n => { nombre: n } // Mal ❌ (devuelve undefined)</code>
+          <br><code>n => ({ nombre: n }) // Bien ✅ (devuelve un objeto)</code>
+        </div>
+      </div>
+    </div>
+    
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>El problema de `this` léxico</h3>
+        <p>Las arrow functions no tienen su propio valor de <code>this</code>. Heredan el <code>this</code> del contexto donde se escribieron, por lo que **no deben usarse como métodos de un objeto**.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="kw">const</span> persona = {
+  nombre: <span class="str">"Ana"</span>,
+  <span class="cm">// Bien: sintaxis clásica (this es 'persona')</span>
+  <span class="fn">saludo1</span>() { <span class="kw">return</span> <span class="kw">this</span>.nombre; }, 
+  
+  <span class="cm">// Mal: arrow function (this heredado, será 'window' o 'undefined')</span>
+  saludo2: () => <span class="kw">this</span>.nombre 
+};</pre>
+        </div>
+        <div class="callout callout-tip">
+          <strong>💡 Regla de oro:</strong>
+          Usa la sintaxis clásica para métodos de objeto. Usa arrow functions para <em>callbacks</em> (funciones que pasas a otras, como en <code>setTimeout</code> o <code>addEventListener</code>).
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================== 4. EL DOM ================== -->
+  <section id="dom">
+    <div class="section-header">
+      <div class="section-label">Parte 4</div>
+      <h2>El DOM — Del HTML al Árbol</h2>
+      <p class="section-intro">
+        JavaScript no manipula el archivo <code>.html</code> original. Al cargar la página, el navegador crea en memoria un árbol de objetos (el <strong>D</strong>ocument <strong>O</strong>bject <strong>M</strong>odel). Tú tocas el DOM con JS y el navegador repinta la pantalla.
+      </p>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Seleccionar Elementos: querySelector(All)</h3>
+        <p>Usamos los mismos selectores que en CSS (<code>.clase</code>, <code>#id</code>, <code>etiqueta</code>) para buscar elementos en el árbol.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="cm">// Busca el PRIMER elemento que coincide</span>
+<span class="kw">const</span> titulo = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"#titulo"</span>);
+<span class="kw">const</span> primerMensaje = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">".mensaje"</span>);
+
+<span class="cm">// Busca TODOS los que coinciden (devuelve un NodeList)</span>
+<span class="kw">const</span> todosMensajes = <span class="fn">document</span>.<span class="fn">querySelectorAll</span>(<span class="str">".mensaje"</span>);
+
+<span class="cm">// Puedes usar forEach en un NodeList</span>
+todosMensajes.<span class="fn">forEach</span>(msg => msg.<span class="fn">classList</span>.<span class="fn">add</span>(<span class="str">"leido"</span>));</pre>
+        </div>
+        <div class="callout callout-warn">
+          <strong>⚠️ NodeList no es exactamente un Array</strong>
+          Aunque tiene <code>forEach</code>, no tiene <code>map</code>, <code>filter</code> o <code>reduce</code>. Si los necesitas, conviértelo: <code>Array.from(document.querySelectorAll("p"))</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Escribir y modificar el DOM</h3>
+        <p>Hay varias propiedades importantes para interactuar con el contenido de un elemento.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Propiedad</th><th>Uso principal</th><th>Seguridad</th></tr></thead>
+            <tbody>
+              <tr><td><code>textContent</code></td><td>Insertar texto plano. Las etiquetas HTML se muestran como texto sin renderizar.</td><td>🔒 <strong>Seguro</strong>. Usar por defecto para contenido del usuario.</td></tr>
+              <tr><td><code>innerHTML</code></td><td>Insertar texto e interpretar el HTML interno (ej: <code>&lt;b&gt;negrita&lt;/b&gt;</code>).</td><td>⚠️ <strong>Peligroso</strong> (XSS). Nunca usar con datos no confiables.</td></tr>
+              <tr><td><code>value</code></td><td>Leer o escribir el contenido de campos de formulario (inputs, textareas).</td><td>—</td></tr>
+              <tr><td><code>dataset</code></td><td>Leer datos anclados al HTML con <code>data-*</code> (ej: <code>data-id="42"</code> → <code>el.dataset.id</code>).</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Clases CSS (classList)</h3>
+        <p>En lugar de tocar estilos a mano con JS, es mejor usar JS para poner/quitar clases y dejar que CSS haga su trabajo.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="kw">const</span> body = <span class="fn">document</span>.body;
+
+body.<span class="fn">classList</span>.<span class="fn">add</span>(<span class="str">"oscuro"</span>);      <span class="cm">// Poner clase</span>
+body.<span class="fn">classList</span>.<span class="fn">remove</span>(<span class="str">"oscuro"</span>);   <span class="cm">// Quitar clase</span>
+body.<span class="fn">classList</span>.<span class="fn">toggle</span>(<span class="str">"oscuro"</span>);   <span class="cm">// Interruptor: si la tiene la quita, si no la pone</span>
+<span class="fn">console</span>.<span class="fn">log</span>(body.<span class="fn">classList</span>.<span class="fn">contains</span>(<span class="str">"oscuro"</span>)); <span class="cm">// true/false</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Crear nodos dinámicamente</h3>
+        <p>Para añadir un nuevo elemento a la página son necesarios 3 pasos.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="cm">// 1. CREAR (Existe en memoria, no se ve)</span>
+<span class="kw">const</span> li = <span class="fn">document</span>.<span class="fn">createElement</span>(<span class="str">"li"</span>);
+
+<span class="cm">// 2. CONFIGURAR (Añadir texto, clases...)</span>
+li.textContent = <span class="str">"Interstellar"</span>;
+li.<span class="fn">classList</span>.<span class="fn">add</span>(<span class="str">"pelicula"</span>);
+
+<span class="cm">// 3. COLGAR (Aparece en la página al añadirlo a un elemento padre)</span>
+<span class="kw">const</span> lista = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"ul"</span>);
+lista.<span class="fn">append</span>(li); <span class="cm">// Lo coloca al final (prepend lo coloca al principio)</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="quiz">
+      <p>¿Qué método debes usar para insertar texto escrito por un usuario externo a tu base de datos de manera segura en un `p`?</p>
+      <div class="quiz-opts">
+        <button class="quiz-opt" onclick="checkQuiz(this, false)"><code>parrafo.innerHTML = texto</code></button>
+        <button class="quiz-opt" onclick="checkQuiz(this, true)"><code>parrafo.textContent = texto</code></button>
+        <button class="quiz-opt" onclick="checkQuiz(this, false)"><code>parrafo.value = texto</code></button>
+      </div>
+      <div class="quiz-feedback"></div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================== 5. EL BOM ================== -->
+  <section id="bom">
+    <div class="section-header">
+      <div class="section-label">Parte 5</div>
+      <h2>El BOM — El Navegador Global</h2>
+      <p class="section-intro">
+        Si el DOM es la página <code>document</code>, el BOM (Browser Object Model) es el navegador entero representado por el objeto <code>window</code>. Lo incluye todo, incluso al propio <code>document</code>.
+      </p>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Propiedades útiles del objeto `window`</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Objeto/Método</th><th>Para qué sirve</th></tr></thead>
+            <tbody>
+              <tr><td><code>window.innerWidth</code></td><td>Anchura de la ventana en píxeles.</td></tr>
+              <tr><td><code>window.location</code></td><td>El enlace actual (href, hostname). Puedes hacer <code>location.reload()</code>.</td></tr>
+              <tr><td><code>window.navigator</code></td><td>Información del sistema: idioma, estado de conexión.</td></tr>
+              <tr><td><code>alert()</code> / <code>prompt()</code></td><td>Diálogos del navegador. Como están dentro de window, puedes llamar a <code>alert()</code> directamente en vez de <code>window.alert()</code>.</td></tr>
+              <tr><td><code>setTimeout(fn, ms)</code></td><td>Llama a la función <code>fn</code> UNA SOLA VEZ pasados <code>ms</code> milisegundos.</td></tr>
+              <tr><td><code>setInterval(fn, ms)</code></td><td>Llama a la función <code>fn</code> REPETIDAMENTE cada <code>ms</code> milisegundos hasta usar <code>clearInterval()</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================== 6. EVENTOS ================== -->
+  <section id="eventos">
+    <div class="section-header">
+      <div class="section-label">Parte 6</div>
+      <h2>Eventos — La página reacciona al usuario</h2>
+      <p class="section-intro">
+        Los eventos ocurren cuando el usuario interactúa (hace click, pulsa una tecla, envía un formulario). Nosotros "escuchamos" y reaccionamos a ellos usando <code>addEventListener</code>.
+      </p>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Escuchar con addEventListener</h3>
+        <p>Recibe dos cosas: qué evento escuchar y qué función ejecutar (un callback). Esta función recibirá automáticamente un objeto evento (<code>e</code> o <code>event</code>).</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="kw">const</span> boton = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"button"</span>);
+
+<span class="cm">// Escucha al evento 'click', al suceder ejecuta la arrow function</span>
+boton.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, (e) => {
+  <span class="fn">document</span>.body.<span class="fn">classList</span>.<span class="fn">toggle</span>(<span class="str">"oscuro"</span>);
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Hiciste click en: "</span>, e.target);
+});</pre>
+        </div>
+        <div class="callout callout-info">
+          <strong>Tipos de eventos comunes:</strong>
+          <code>click</code> (pulsar), <code>input</code> (escribir cada tecla en un campo), <code>submit</code> (enviar un form), <code>keydown</code> (teclado).
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Formularios y preventDefault()</h3>
+        <p>Por defecto, enviar un formulario recarga la página instantáneamente. Para manejar los datos sin perder el estado de JavaScript, cancelamos este comportamiento con <code>e.preventDefault()</code>.</p>
+
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="kw">const</span> form = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"form"</span>);
+<span class="kw">const</span> input = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"input"</span>);
+
+form.<span class="fn">addEventListener</span>(<span class="str">"submit"</span>, (e) => {
+  e.<span class="fn">preventDefault</span>(); <span class="cm">// ¡Crucial! Evita que se recargue la web.</span>
+  
+  <span class="kw">const</span> nombre = input.value.<span class="fn">trim</span>();
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Se envió: "</span> + nombre);
+  
+  form.<span class="fn">reset</span>(); <span class="cm">// Vacía los campos</span>
+});</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Delegación de eventos</h3>
+        <p>Los eventos "burbujean" hacia arriba: un clic en un <code>li</code> sube hacia el <code>ul</code>. En lugar de poner listeners en 100 <code>li</code> (y tener que ponerlos de nuevo al añadir nuevos items), ponemos **un solo listener en el <code>ul</code> padre**.</p>
+        
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">JavaScript</span><button class="copy-btn" onclick="copyCode(this)">Copiar</button></div>
+          <pre><span class="kw">const</span> lista = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"ul"</span>);
+
+lista.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, (e) => {
+  <span class="cm">// 'e.target' es exactamente donde hicimos clic (ej. un <span> o la 'X')</span>
+  <span class="cm">// 'closest' busca hacia arriba el primer elemento que encaje, o null.</span>
+  <span class="kw">const</span> itemLi = e.target.<span class="fn">closest</span>(<span class="str">"li"</span>);
+  
+  <span class="kw">if</span> (itemLi) {
+    <span class="cm">// Sabemos qué Li se tocó.</span>
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Tocaste la tarea:"</span>, itemLi.textContent);
+  }
+});</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ================== CHEAT SHEET ================== -->
+  <section id="cheatsheet">
+    <div class="section-header">
+      <div class="section-label">Resumen</div>
+      <h2>Chuleta del día</h2>
+    </div>
+
+    <div class="cheat-grid">
+      <div class="cheat-card">
+        <div class="cheat-title" style="color:var(--ls-color)">Objetos</div>
+        <code>o.clave</code> · <code>o["clave"]</code>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:6px">Leer propiedades.</p>
+        <code>o.nueva = 1</code><br>
+        <code>delete o.clave</code>
+      </div>
+      <div class="cheat-card">
+        <div class="cheat-title" style="color:var(--ls-color)">JSON</div>
+        <code>JSON.stringify(o)</code>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:6px">Objeto → texto para enviar.</p>
+        <code>JSON.parse(texto)</code>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:6px">Texto → Objeto recibido.</p>
+      </div>
+      <div class="cheat-card">
+        <div class="cheat-title" style="color:var(--ss-color)">DOM (Seleccionar)</div>
+        <code>document.querySelector(".c")</code><br>
+        <code>document.querySelectorAll("p")</code>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:6px">El primero, o todos (NodeList).</p>
+      </div>
+      <div class="cheat-card">
+        <div class="cheat-title" style="color:var(--ss-color)">DOM (Modificar)</div>
+        <code>el.textContent = "texto"</code><br>
+        <code>el.value = "texto"</code><br>
+        <code>el.classList.toggle("clase")</code>
+      </div>
+      <div class="cheat-card">
+        <div class="cheat-title" style="color:var(--ss-color)">DOM (Crear)</div>
+        <code>const x = document.createElement("p")</code>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:6px">Luego colgarlo con <code>padre.append(x)</code>.</p>
+      </div>
+      <div class="cheat-card">
+        <div class="cheat-title" style="color:var(--re-color)">Eventos (Escuchar)</div>
+        <code>el.addEventListener("click", fn)</code>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:6px">Ejecuta el callback <code>fn</code>.</p>
+      </div>
+      <div class="cheat-card">
+        <div class="cheat-title" style="color:var(--re-color)">Eventos (Formularios)</div>
+        <code>e.preventDefault()</code>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:6px">Evita que se recargue la página en el <code>submit</code>.</p>
+      </div>
+      <div class="cheat-card">
+        <div class="cheat-title" style="color:var(--yellow)">Patrón de Arquitectura UI</div>
+        <code>Estado → render() → DOM</code>
+        <p style="color:var(--text-muted);font-size:12px;margin-top:6px">No toques el DOM a mano, edita tus datos y vuelve a pintar.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const el = document.documentElement;
+    const pct = el.scrollTop / (el.scrollHeight - el.clientHeight) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+  });
+
+  // Copy code
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = '✓ Copiado';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // Quiz
+  function checkQuiz(btn, correct) {
+    const opts = btn.closest('.quiz-opts').querySelectorAll('.quiz-opt');
+    const fb = btn.closest('.quiz').querySelector('.quiz-feedback');
+    opts.forEach(o => o.disabled = true);
+    btn.classList.add(correct ? 'correct' : 'wrong');
+    fb.textContent = correct
+      ? '✅ ¡Correcto! textContent se renderiza como texto plano sin ejecutar inyecciones HTML.'
+      : '❌ Incorrecto. Vuelve a comprobar la diferencia de seguridad entre innerHTML y textContent.';
+    fb.style.color = correct ? 'var(--green)' : 'var(--red)';
+  }
+</script>
+</body>
+</html>
